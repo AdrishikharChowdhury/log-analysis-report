@@ -1,3 +1,5 @@
+%% GENERATED FILE - do not edit main.tex directly.
+%% Source: generate_latex.py + output/phase1_iocs.csv  (uv run python generate_latex.py)
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=0.85in]{geometry}
 \usepackage[table]{xcolor}
@@ -155,7 +157,7 @@ Terminal evidence tables are produced by rich\_triage.py; save a screenshot as i
 \subsection*{Step 4: Indicator Extraction \& Reporting}
 
 \codebox{uv run python phase1\_triage.py \ \# output/phase1\_iocs.csv (60 rows)\\uv run python gen\_figures.py \ \# Latex/images/c2\_beacon.png, timeline.png\\uv run python generate\_latex.py \ \# Latex/main.tex\\cd Latex \&\& latexmk -pdf main.tex}
-
+\newpage
 \section{Technical Findings Summary}
 Findings below use wrapped monospace cells so hashes and paths never overflow margins.
 \begin{center}\rowcolors{2}{orangefill}{white}

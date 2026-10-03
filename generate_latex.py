@@ -119,7 +119,9 @@ tl_rows = ""
 for t, e, v in timeline:
     tl_rows += f"{cell(t)} & {cell(e)} & {cell(v)} \\\\\n\\hline\n"
 
-tex = r"""\documentclass[11pt,a4paper]{article}
+tex = r"""%% GENERATED FILE - do not edit main.tex directly.
+%% Source: generate_latex.py + output/phase1_iocs.csv  (uv run python generate_latex.py)
+\documentclass[11pt,a4paper]{article}
 \usepackage[margin=0.85in]{geometry}
 \usepackage[table]{xcolor}
 \usepackage{tabularx,longtable,booktabs,array,graphicx,enumitem,tikz,tocloft,fancyhdr,caption}

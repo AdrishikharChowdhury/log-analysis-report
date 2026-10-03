@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1791019518.9066 "main.tex" "main.pdf" "main" 1791019520.70726 0
+["pdflatex"] 1791024683.85546 "main.tex" "main.pdf" "main" 1791024686.38664 0
   "C:/Users/amiad/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1790959865 164858 1926c8d7bd1823f0c8393a5c0272d2d9 ""
   "C:/Users/amiad/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1095.pk" 1772550803 12668 e59cf1625674339d2e18361c6399a14d ""
   "C:/Users/amiad/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1790686955 13333862 2431d32ad0394a3f5fa0fff3e328f77d ""
@@ -150,10 +150,10 @@
   "images/c2_beacon.png" 1791009297 77637 5a6a47215cdc531f549b76a0dc594840 ""
   "images/timeline.png" 1791009297 38065 0a042bbf00956f806384915f93d33c88 ""
   "images/triage_tables.png" 1791018865 101312 cc0cffdd7f0e7b597add09789d36259f ""
-  "main.aux" 1791019520 2345 d0a399c2e627abff1eeabfcdef2f98ae "pdflatex"
-  "main.out" 1791019520 1999 930c078e451ef288625db3edd0bac359 "pdflatex"
-  "main.tex" 1791019498 38749 b2d7a69521932552cd92bbd15a192443 ""
-  "main.toc" 1791019520 1026 471687ab4e82ca53e4010a70207986ae "pdflatex"
+  "main.aux" 1791024686 2345 d0a399c2e627abff1eeabfcdef2f98ae "pdflatex"
+  "main.out" 1791024686 1999 930c078e451ef288625db3edd0bac359 "pdflatex"
+  "main.tex" 1791024664 38891 82cf368cacc05a5c09f451be488a6f8c ""
+  "main.toc" 1791024686 1026 471687ab4e82ca53e4010a70207986ae "pdflatex"
   (generated)
   "main.aux"
   "main.log"

@@ -1,13 +1,24 @@
 [project]
 name = "log-analysis-report"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Organisation X SOC Endpoint & Log Analysis Framework (Project 3)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "matplotlib>=3.11.2",
     "pandas>=3.0.6",
     "rich>=15.0.0",
+]
+
+[dependency-groups]
+# Full production spec (Part 1). NOT installed by default: uv sync --group full
+full = [
+    "polars>=1.0",
+    "numpy>=1.26",
+    "streamlit>=1.37",
+    "plotly>=5.22",
+    "scikit-learn>=1.5",
+    "typer>=0.12",
 ]
 
 [tool.uv.workspace]

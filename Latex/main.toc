@@ -6,8 +6,8 @@
 \contentsline {subsection}{\numberline {3.3}Outcome}{4}{subsection.3.3}%
 \contentsline {section}{\numberline {4}Reconstructed Timeline}{4}{section.4}%
 \contentsline {section}{\numberline {5}Step by Step Process Along with Screenshots}{5}{section.5}%
-\contentsline {section}{\numberline {6}Technical Findings Summary}{7}{section.6}%
-\contentsline {section}{\numberline {7}MITRE ATT\&CK Mapping}{7}{section.7}%
+\contentsline {section}{\numberline {6}Technical Findings Summary}{8}{section.6}%
+\contentsline {section}{\numberline {7}MITRE ATT\&CK Mapping}{8}{section.7}%
 \contentsline {section}{\numberline {8}Recommendations}{8}{section.8}%
-\contentsline {section}{\numberline {A}Appendix A: Pipeline-Extracted IOCs (60 dedup rows)}{8}{appendix.A}%
-\contentsline {section}{\numberline {B}Appendix B: Reproducibility}{11}{appendix.B}%
+\contentsline {section}{\numberline {A}Appendix A: Pipeline-Extracted IOCs (60 dedup rows)}{9}{appendix.A}%
+\contentsline {section}{\numberline {B}Appendix B: Reproducibility}{12}{appendix.B}%

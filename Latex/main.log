@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.1) (preloaded format=pdflatex 2026.9.29)  3 OCT 2026 15:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.1) (preloaded format=pdflatex 2026.9.29)  3 OCT 2026 16:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -694,7 +694,7 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip104
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 31.
+Package hyperref Info: Option `colorlinks' set `true' on input line 33.
 
 (C:\Users\amiad\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
 tex.def
@@ -703,24 +703,24 @@ File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 ) (main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 33.
-LaTeX Font Info:    ... okay on input line 33.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -785,20 +785,20 @@ File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 33.
+Package hyperref Info: Link coloring ON on input line 35.
  (main.out) (main.out)
 \@outlinefile=\write4
 \openout4 = `main.out'.
 
 
-Underfull \hbox (badness 1910) in paragraph at lines 53--53
+Underfull \hbox (badness 1910) in paragraph at lines 55--55
 []|\OT1/cmr/m/n/10.95 Remote-access per-
  []
 
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 56.
+(Font)              <7> on input line 58.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 56.
+(Font)              <5> on input line 58.
 [1
 
 {C:/Users/amiad/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}] (main.toc)
@@ -806,7 +806,7 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 \openout5 = `main.toc'.
 
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 75--75
+Underfull \hbox (badness 10000) in paragraph at lines 77--77
 []|\OT1/cmr/m/n/10.95 Beaconing per-sis-
  []
 
@@ -814,21 +814,21 @@ Underfull \hbox (badness 10000) in paragraph at lines 75--75
 <images/c2_beacon.png, id=97, 645.1302pt x 536.7252pt>
 File: images/c2_beacon.png Graphic file (type png)
 <use images/c2_beacon.png>
-Package pdftex.def Info: images/c2_beacon.png  used on input line 147.
+Package pdftex.def Info: images/c2_beacon.png  used on input line 149.
 (pdftex.def)             Requested size: 450.91415pt x 375.13998pt.
 
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 147.
+(caption)                particular \caption on input line 149.
 See the caption package documentation for explanation.
 
 <images/timeline.png, id=99, 645.1302pt x 240.4182pt>
 File: images/timeline.png Graphic file (type png)
 <use images/timeline.png>
-Package pdftex.def Info: images/timeline.png  used on input line 150.
+Package pdftex.def Info: images/timeline.png  used on input line 152.
 (pdftex.def)             Requested size: 474.64801pt x 176.88316pt.
 
-Underfull \hbox (badness 1107) in paragraph at lines 149--152
+Underfull \hbox (badness 1107) in paragraph at lines 151--154
 \OT1/cmr/m/n/10.95 Per-endpoint ses-sion dates (UTC+05:30) with quar-an-tine me
 -dian ~0h and av[]scan me-dian
  []
@@ -837,24 +837,24 @@ Underfull \hbox (badness 1107) in paragraph at lines 149--152
 <images/triage_tables.png, id=109, 574.3056pt x 508.299pt>
 File: images/triage_tables.png Graphic file (type png)
 <use images/triage_tables.png>
-Package pdftex.def Info: images/triage_tables.png  used on input line 153.
+Package pdftex.def Info: images/triage_tables.png  used on input line 155.
 (pdftex.def)             Requested size: 379.71985pt x 336.08333pt.
- [6 <./images/timeline.png> <./images/triage_tables.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 203--204
+ [6 <./images/timeline.png> <./images/triage_tables.png>] [7]
+Underfull \hbox (badness 10000) in paragraph at lines 205--206
 []\OT1/cmr/m/n/10.95 Isolate still-compromised hosts (EPZRAPEL, EPVC2P55, EPT3K
 TUL, EPLFOXSS,
  []
 
 
-Underfull \hbox (badness 5331) in paragraph at lines 203--204
+Underfull \hbox (badness 5331) in paragraph at lines 205--206
 \OT1/cmr/m/n/10.95 EPWZ7L6L, EPSES7ZK, EPGSQVEB, EPFQSCDV); triage co-suspects 
 EPCRFN4D/
  []
 
-[7]
-ignored: Infinite glue shrinkage found in box being split [8]
+[8]
 ignored: Infinite glue shrinkage found in box being split [9]
-ignored: Infinite glue shrinkage found in box being split [10] [11] (main.aux)
+ignored: Infinite glue shrinkage found in box being split [10]
+ignored: Infinite glue shrinkage found in box being split [11] [12] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -863,8 +863,8 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 930C078E451EF288625DB3EDD0BAC359;1999.
  ) 
 Here is how much of TeX's memory you used:
- 23095 strings out of 467866
- 441444 string characters out of 5418325
+ 23096 strings out of 467866
+ 441451 string characters out of 5418325
  936875 words of memory out of 5000000
  51599 multiletter control sequences out of 15000+600000
  634038 words of font info for 62 fonts, out of 8000000 for 9000
@@ -879,9 +879,9 @@ eX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/amiad/AppData/Local/Progr
 ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/amiad/AppData/Loc
 al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/amiad/Ap
 pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on main.pdf (11 pages, 376280 bytes).
+Output written on main.pdf (12 pages, 377327 bytes).
 PDF statistics:
- 194 PDF objects out of 1000 (max. 8388607)
- 40 named destinations out of 1000 (max. 500000)
+ 198 PDF objects out of 1000 (max. 8388607)
+ 41 named destinations out of 1000 (max. 500000)
  132 words of extra memory for PDF output out of 10000 (max. 10000000)
 
