@@ -1,0 +1,338 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{tabularx,longtable,booktabs,array,graphicx,enumitem,tikz,tocloft,fancyhdr,caption}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning}
+% Prism palette
+\definecolor{navy}{HTML}{153B5B}
+\definecolor{accentblue}{HTML}{1A56DB}
+\definecolor{bluefill}{HTML}{EAF3F8}
+\definecolor{greenfill}{HTML}{EAF6EE}
+\definecolor{orangefill}{HTML}{FFF2DF}
+\definecolor{purplefill}{HTML}{F2ECF8}
+\definecolor{sevred}{HTML}{B42318}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.15}
+\setlength{\emergencystretch}{2.5em}
+\newcommand{\sev}[2]{\textcolor{#1}{\textbf{[#2]}}}
+\newcommand{\badge}[2]{\colorbox{#1}{\color{white}\textbf{\small #2}}}
+\newcommand{\codebox}[1]{\noindent\fcolorbox{navy!60}{bluefill}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\ttfamily\small #1}}}
+% TOC styling (navy entries, dotted leaders, closing rule drawn after \tableofcontents)
+\renewcommand{\cftsecfont}{\color{navy}\bfseries}
+\renewcommand{\cftsecpagefont}{\color{navy}\bfseries}
+\renewcommand{\cftsubsecfont}{\color{navy}}
+\renewcommand{\cftdot}{\color{navy}.}
+% Running header
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{navy}\textbf{Organisation X: Endpoint Compromise Forensics}}
+\fancyhead[R]{\small 03 Oct 2026}
+\renewcommand{\headrulewidth}{0.6pt}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=navy,urlcolor=navy}
+\title{}\author{}\date{}
+\begin{document}
+\thispagestyle{empty}
+% ---------- Cover ----------
+\begin{center}
+{\small\color{accentblue}\textsc{Organisation X endpoint forensics --- September 2026}}\\[10pt]
+{\LARGE\bfseries\color{navy} Endpoint Compromise Forensic Analysis}\\[2pt]
+{\large\color{navy} of Multi-Endpoint Phishing \& C2 Beaconing Campaign}\\[10pt]
+{\color{accentblue}\rule{0.22\linewidth}{3pt}}\\[16pt]
+{\Large\bfseries Adrishikhar Chowdhury}\\[4pt]
+{\color{navy} amiadrishikhar@gmail.com}\\[4pt]
+{October 03, 2026}\\[2pt]
+{\color{navy} SOC Lead, Organisation X}\\[14pt]
+\end{center}
+{\small\color{accentblue}\textbf{EXECUTIVE RISK OVERVIEW}}\\[4pt]
+\begin{tabularx}{\linewidth}{@{}p{2.1cm}p{3.4cm}Y@{}}\toprule
+\rowcolor{navy}\color{white}\textbf{Severity} & \color{white}\textbf{Vector} & \color{white}\textbf{Detail} \\\midrule
+\badge{sevred}{HIGH} & {Persistent C2} & {Five hosts beacon 1--3 weeks post-quarantine via per-victim C2 domains paired with anonymized IPs in same-second sessions.} \\
+\badge{sevred}{HIGH} & {Remote-access persist} & {Anydesk relays run after payload quarantine (EPGSQVEB); one phishing host never quarantined (EPLFOXSS, AV file-not-found 01--19 Sep).} \\
+\badge{orange!70!black}{MEDIUM} & {Trojanized installers} & {HP/printer bundles, freshysearch redirect chain, and XDG desktop persistence.} \\
+\badge{accentblue}{INFO} & {USB ruled out} & {EPD24DBC Mass Storage (22-09, post-window) uncorroborated; mouse benign. Phishing/drive-by, not a USB worm.} \\\bottomrule
+\end{tabularx}
+
+\vspace{6pt}
+{\small\begin{tabular}{@{}>{\bfseries}l p{13.2cm}@{}}
+Scope & endpoint\_security.csv (23,540 rows, 247 endpoints, 19 units) + usb\_events.csv (8) + web\_activity.csv (2,812,118 rows, 248 endpoints), all local UTC+05:30 \\
+Findings & 33 endpoints FileType=Malicious (134 rows, 60 dedup) + 2 AV-only active + 8 C2 clusters \\
+\end{tabular}}\newpage
+% ---------- TOC ----------
+\tableofcontents
+\noindent{\color{accentblue}\rule{\linewidth}{1pt}}
+\newpage
+\section{Executive Summary}
+Endpoint telemetry across \textasciitilde250 Linux desktops (19 units, September 2026) characterises a multi-vector phishing and drive-by campaign staging pseudorandom and lure-themed payloads from user-writable paths.
+Artefact review confirmed quarantined payloads, a failed mail-payload remediation, per-victim C2 beaconing, hijacker bundling, and post-payload remote-access sessions.
+Verified file hashes, beacon indicators, and MITRE mappings are provided for endpoint containment.
+\subsection*{Risk Assessment (for leadership)}
+\begin{tabularx}{\linewidth}{@{}p{2.1cm}p{3.4cm}Y@{}}\toprule
+\rowcolor{navy}\color{white}\textbf{Severity} & \color{white}\textbf{Area} & \color{white}\textbf{Detail} \\\midrule
+\badge{sevred}{HIGH} & {Staging at scale} & {33 endpoints quarantined FileType=Malicious material (134 rows, 60 dedup endpoint+SHA), including a 9-host shared xbel payload.} \\
+\badge{sevred}{HIGH} & {Beaconing persistence} & {Five hosts re-contact per-victim C2 for days to weeks after quarantine; Anydesk persists post-payload on one host.} \\
+\badge{orange!70!black}{MEDIUM} & {Installer trust abuse} & {Trojanized printer and HP bundles plus a browser-hijacker chain defeat signature-only inspection.} \\
+\badge{accentblue}{INFO} & {Detection gap} & {AV never logged a FOUND line (all summaries Infectedfiles:0); 179 action rows across 13 hosts carry the signal, and two AV-only hosts never reached quarantine.} \\\bottomrule
+\end{tabularx}
+\subsection*{Key Concepts (plain-English primer)}
+\textbf{C2 beacon pair.} The agent logs each contacted destination separately, so one connection appears as two same-second rows: a domain plus the IP it resolved to. Repeated domain+IP pairs at fixed times mean automated beaconing, not browsing.\\
+\textbf{Rare-domain cardinality.} Counting how many endpoints ever contacted each destination separates campaign infrastructure (1--3 endpoints) from benign shared services (hundreds). LAN suffixes (\texttt{.hgu\_lan}, \texttt{.bbrouter}, \texttt{.dlink}, \texttt{.local}) are stripped first.\\
+\textbf{Anonymized indicators.} Challenge data replaces real C2 with \texttt{svc-<hex>.gov.example} domains and \texttt{198.18.0.0/15} IPs; widespread \texttt{svc-*} names are genuine gov portals and are excluded.\\
+\textbf{Clock skew.} Endpoints upload days late with wrong clocks, so timelines use \texttt{event\_time} with \texttt{received\_time} as a sanity band (quarantine median \textasciitilde0h; av\_scan median 34h).\\
+\textbf{Quarantine re-listing.} The service re-lists the whole quarantine folder per scan, so one file appears many times; analysis dedups by endpoint+SHA (134 rows \textrightarrow{} 60).
+\section{Tools Used}
+Only tools that produced concrete evidence in this investigation are listed.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Python 3.12 + pandas (chunked)} --- endpoint triage and 2.8M-row web cardinality/C2 scoring
+\item \textbf{rich} --- terminal evidence tables (\texttt{rich\_triage.py})
+\item \textbf{uv} --- reproducible environment (\texttt{uv sync}, \texttt{uv run})
+\item \textbf{MiKTeX latexmk} --- this report build (\texttt{Latex/main.tex} \textrightarrow{} PDF)
+\end{itemize}
+\section{Methodology}
+\subsection{Analysis}
+Quarantine FileType parsing (\texttt{FileType:} field with dedup), AV action-line review (\texttt{Beginning quarantine / Attempting / File not found}), web\_block baselining, USB correlation, then chunked web\_activity rare-domain scoring with same-second pair resolution and clock-skew banding.
+\subsection{Finding}
+Phishing and drive-by traits (lure documents, mail payload, hijacker bundling, trojanized installers), per-victim C2 pairs on 8 clusters, Anydesk remote access, \texttt{.desktop} persistence, and two AV-remediation gaps; USB and web\_block ruled out as vectors; shared xbel hash links 9 hosts.
+\subsection{Outcome}
+Actionable IoCs (60 hashes, paths, 8 C2 clusters, MITRE map) compiled for isolation, firewall blocks, and EDR hunts.
+\section{Reconstructed Timeline}
+Quarantine dates are first-seen \texttt{Quarantined At}; web sessions fall in the 10--21 Sep window. Isolate and re-image any host showing this sequence.
+\begin{center}\rowcolors{2}{bluefill}{white}
+\begin{tabularx}{\linewidth}{p{2.6cm}Y Y}\toprule
+\rowcolor{bluefill}\textbf{Timestamp} & \textbf{Event} & \textbf{Evidence} \\\midrule
+{\small\raggedright 31-08 13:21\par} & {\small\raggedright EPZRAPEL file quarantined (pre-window)\par} & {\small\raggedright 53EDA42869D4... hex-named file; C2 follows 11-19 Sep.\par} \\
+\hline
+{\small\raggedright 02-09\par} & {\small\raggedright First xbel wave\par} & {\small\raggedright EPMQTKSL + EPC2L3UH (18 re-lists, heaviest) share SHA 5e10b349....\par} \\
+\hline
+{\small\raggedright 03/07/08-09\par} & {\small\raggedright Lure + installer wave\par} & {\small\raggedright Dash Camera PPP pdf, RAGHAV PDFs, printer binaries, win-lbp exe, oscar xbel.\par} \\
+\hline
+{\small\raggedright 09/10-09\par} & {\small\raggedright Juliett + kilo hits\par} & {\small\raggedright EPFQSCDV xbel; EPEEHWSG Library Books.xlsx.\par} \\
+\hline
+{\small\raggedright 10-09 11:22\par} & {\small\raggedright Hijacker chain starts\par} & {\small\raggedright EPSES7ZK freshysearch 4-way redirect bursts begin.\par} \\
+\hline
+{\small\raggedright 11-09\par} & {\small\raggedright Peak day\par} & {\small\raggedright bundle.js x20, Final\_Documents.zip, Dash Camera pdf, EPVC2P55 C2 15:58, EPZRAPEL C2 19:27.\par} \\
+\hline
+{\small\raggedright 12-09\par} & {\small\raggedright Mail + staging C2\par} & {\small\raggedright EPLFOXSS pairs; EPWZ7L6L staging; shared n7093/n3618 cluster active.\par} \\
+\hline
+{\small\raggedright 13/14-09\par} & {\small\raggedright Document wave\par} & {\small\raggedright mydoc x4, RETIREES WELFARE xlsx; EPVC2P55 bursts.\par} \\
+\hline
+{\small\raggedright 15-09\par} & {\small\raggedright Anydesk + cab + banking\par} & {\small\raggedright EPGSQVEB sessions; Data1.cab 11:28; EPVSWBNA banking (pre-infection).\par} \\
+\hline
+{\small\raggedright 17-22-09\par} & {\small\raggedright Late hits + USB\par} & {\small\raggedright Lakeside docs, EPNPX6VY dll, HP x5 AV detect; EPD24DBC USB 22-09 (post-window).\par} \\
+\hline
+{\small\raggedright 23-26-09\par} & {\small\raggedright Tail quarantines\par} & {\small\raggedright Printer DLLs AV, libreoffice .desktop x2, dash cam pdf, xlsx/docx/so (post-window).\par} \\
+\hline
+\bottomrule\end{tabularx}\end{center}
+\section{Step by Step Process Along with Screenshots}
+\subsection*{Architecture Overview}
+\vspace{1cm}
+\begin{center}
+\begin{tikzpicture}[node distance=1.0cm,
+  box/.style={rectangle,rounded corners,draw=navy,thick,minimum width=2.8cm,minimum height=1.1cm,align=center,font=\small},
+  arr/.style={-{Stealth[scale=1.1]},thick,color=navy}]
+\node[box,fill=bluefill] (p1) {1. Triage + USB};
+\node[box,fill=greenfill,right=of p1] (p2) {2. Chunked web C2};
+\node[box,fill=orangefill,right=of p2] (p3) {3. Timeline + IOC};
+\node[box,fill=purplefill,right=of p3] (p4) {4. Indicator + Report};
+\draw[arr] (p1)--(p2); \draw[arr] (p2)--(p3); \draw[arr] (p3)--(p4);
+\end{tikzpicture}
+\end{center}
+\subsection*{Step 1: Endpoint Triage \& Cryptographic Baselining}
+Parsed 23,540 rows: 134 FileType=Malicious rows across 33 endpoints (60 dedup), 0 FOUND lines, 179 AV action rows, 914 policy web blocks, 8 USB rows with zero compromised overlap:
+
+\vspace{1cm}
+\codebox{uv run python rich\_triage.py\\\# scope, quarantine, AV gaps, USB, skew, C2 spot counts}
+
+\subsection*{Step 2: Chunked Web C2 Hunt}
+Rare-domain scoring over 2,812,118 rows (19,027 uniq destinations) isolated per-victim beacons; same-second domain+IP pairs confirm sessions. Widespread gov/Mozilla/Yahoo infra excluded as benign.
+\IfFileExists{images/c2_beacon.png}{{\centering\includegraphics[width=0.95\linewidth]{images/c2_beacon.png}\captionof{figure}{Confirmed C2 indicators by hit count (verified web counts).}\par}}{}
+\subsection*{Step 3: Timeline \& Clock-Skew Review}
+Per-endpoint session dates (UTC+05:30) with quarantine median \textasciitilde0h and av\_scan median 34h bands; late uploaders (EPC2L3UH 18.4h, EPLFOXSS 31.8h, EPGSQVEB 32.9h) flagged offline.
+\IfFileExists{images/timeline.png}{\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{images/timeline.png}\caption{C2 beacon active days per endpoint.}\end{figure}}{}
+Terminal evidence tables are produced by rich\_triage.py; save a screenshot as images/triage\_tables.png to embed it here.
+
+\IfFileExists{images/triage_tables.png}{\begin{figure}[h!]\centering\includegraphics[width=0.8\linewidth]{images/triage_tables.png}\caption{Rich Phase 1 terminal tables (abridged; full output via rich\_triage.py).}\end{figure}}{}
+
+\subsection*{Step 4: Indicator Extraction \& Reporting}
+
+\codebox{uv run python phase1\_triage.py \ \# output/phase1\_iocs.csv (60 rows)\\uv run python gen\_figures.py \ \# Latex/images/c2\_beacon.png, timeline.png\\uv run python generate\_latex.py \ \# Latex/main.tex\\cd Latex \&\& latexmk -pdf main.tex}
+
+\section{Technical Findings Summary}
+Findings below use wrapped monospace cells so hashes and paths never overflow margins.
+\begin{center}\rowcolors{2}{orangefill}{white}
+\begin{tabularx}{\linewidth}{p{2.2cm}Y Y p{2.8cm}}\toprule
+\rowcolor{orangefill}\textbf{Endpoint} & \textbf{Payload} & \textbf{C2 + counts} & \textbf{Persistence} \\\midrule
+{\small\raggedright EPZRAPEL\par} & {\ttfamily\scriptsize\raggedright 53EDA42869\allowbreak{}D4... (hex-named\allowbreak{})\par} & {\ttfamily\scriptsize\raggedright svc-d44578 (50) + 198.18.165.2\allowbreak{}10 (43); 11-19 Sep pairs\par} & {\small\raggedright Persists 3 wks post-quarantine\par} \\
+\hline
+{\small\raggedright EPVC2P55\par} & {\ttfamily\scriptsize\raggedright Data1.cab\par} & {\ttfamily\scriptsize\raggedright svc-148367 (152) + 198.18.227.5\allowbreak{}0 + 198.41.0.4 + 40.81.94.65\par} & {\small\raggedright C2 after 15-09 quarantine\par} \\
+\hline
+{\small\raggedright EPT3KTUL\par} & {\ttfamily\scriptsize\raggedright Dash Camera-496\allowbreak{}00.00.pdf\par} & {\ttfamily\scriptsize\raggedright svc-89bec8 (35) + 198.18.251.9\allowbreak{}4 + n7473 sub\par} & {\small\raggedright Persists to 20-09\par} \\
+\hline
+{\small\raggedright EPLFOXSS\par} & {\ttfamily\scriptsize\raggedright Evolution-\allowbreak{}mail payload (unquarant\allowbreak{}ined)\par} & {\ttfamily\scriptsize\raggedright svc-89a41f (20) + 198.18.40.61 (18)\par} & {\small\raggedright AV File-not-found 01-19 Sep\par} \\
+\hline
+{\small\raggedright EPWZ7L6L\par} & {\ttfamily\scriptsize\raggedright ops-electr\allowbreak{}on-app.des\allowbreak{}ktop\par} & {\ttfamily\scriptsize\raggedright svc-b76574 (13) + svc-171e30 (10) + n2b40\par} & {\small\raggedright Staged pre-25-09 file\par} \\
+\hline
+{\small\raggedright EPSES7ZK\par} & {\ttfamily\scriptsize\raggedright hp\_LJ1020 x5 (same SHA)\par} & {\ttfamily\scriptsize\raggedright freshysearch + search.fresh\allowbreak{}y + searchtabnew + cloudfront\par} & {\small\raggedright Hijacker + installer\par} \\
+\hline
+{\small\raggedright EPGSQVEB\par} & {\ttfamily\scriptsize\raggedright Final\_Docu\allowbreak{}ments.zip\par} & {\ttfamily\scriptsize\raggedright Anydesk relays + 148.113.17.9\allowbreak{}3/\allowbreak{}.8.189\par} & {\small\raggedright Sessions post-payload\par} \\
+\hline
+{\small\raggedright EPFQSCDV\par} & {\ttfamily\scriptsize\raggedright recently-u\allowbreak{}sed.xbel\par} & {\ttfamily\scriptsize\raggedright n7093 (188) + n3618 (184) + 34.93.158.11\allowbreak{}; shared eps3\par} & {\small\raggedright 2 co-suspects triage\par} \\
+\hline
+{\small\raggedright Others (25)\par} & {\ttfamily\scriptsize\raggedright xbel /\allowbreak{} lure docs /\allowbreak{} printer /\allowbreak{} desktop /\allowbreak{} cab /\allowbreak{} dll\par} & {\ttfamily\scriptsize\raggedright No unique beacon in window\par} & {\small\raggedright File evidence; cleaned or out-of-window\par} \\
+\hline
+\bottomrule\end{tabularx}\end{center}
+\section{MITRE ATT\&CK Mapping}
+\begin{center}\rowcolors{2}{purplefill}{white}
+\begin{tabularx}{\linewidth}{p{2.2cm}p{3.2cm}Y}\toprule
+\rowcolor{purplefill}\textbf{Technique} & \textbf{Name} & \textbf{Observed Behaviour} \\\midrule
+{\small\raggedright T1566.001\par} & {\small\raggedright Spearphishing Attachment\par} & {\small\raggedright Lure PDFs/DOCX/XLSX (Dash Camera, RAGHAV, Lakeside, RETIREES, Staff Library) and the evolution-mail payload on EPLFOXSS.\par} \\
+\hline
+{\small\raggedright T1204.002\par} & {\small\raggedright Malicious File\par} & {\small\raggedright User execution of quarantined payloads: documents, HP/printer installers, .desktop launchers, Data1.cab, Anydesk-linked zip.\par} \\
+\hline
+{\small\raggedright T1036\par} & {\small\raggedright Masquerading\par} & {\small\raggedright Payloads reuse legitimate names and paths: recently-used.xbel, libreoffice-calc.desktop, printer DLL names, ops-electron-app.desktop.\par} \\
+\hline
+{\small\raggedright T1071.001\par} & {\small\raggedright Web Protocols\par} & {\small\raggedright Per-victim C2 beacons (svc-<hex>.gov.example + 198.18.x.x same-second pairs) and the freshysearch redirect chain.\par} \\
+\hline
+{\small\raggedright T1219\par} & {\small\raggedright Remote Access Tools\par} & {\small\raggedright Anydesk relay sessions on EPGSQVEB on 15/16/19 Sep, all after the 11-09 payload quarantine.\par} \\
+\hline
+{\small\raggedright T1574.002\par} & {\small\raggedright DLL Side-Loading (suspected)\par} & {\small\raggedright Trojanized printer bundle layout on EPVSWBNA (launcher.exe with Strings.dll / zshp1020s.dll); unconfirmed at dynamic level.\par} \\
+\hline
+\bottomrule\end{tabularx}\end{center}
+\section{Recommendations}
+{\sloppy
+\begin{enumerate}[leftmargin=*]
+\item Isolate still-compromised hosts (EPZRAPEL, EPVC2P55, EPT3KTUL, EPLFOXSS, EPWZ7L6L, EPSES7ZK, EPGSQVEB, EPFQSCDV); triage co-suspects EPCRFN4D/\allowbreak{}EPV7MB2K/\allowbreak{}EPL4KXNW; collect quarantine dirs and agent logs before re-imaging.
+\item Hunt retrospectively for the shared xbel SHA, the HP/printer bundle SHAs, and per-victim svc beacons using the verified hashes in Appendix A.
+\item Remove desktop-file persistence and audit home download/desktop/share folders for residual payloads; revoke Anydesk access on EPGSQVEB.
+\item Future work: run an authorised isolated capture to confirm callback behaviour of the anonymized C2 endpoints; do not assert payload contents beyond current evidence.
+\end{enumerate}
+}
+\appendix
+\section{Appendix A: Pipeline-Extracted IOCs (60 dedup rows)}
+\rowcolors{2}{orangefill}{white}
+\begin{longtable}{|p{2.2cm}|p{6.9cm}|p{4.6cm}|}\hline
+\rowcolor{navy}\color{white}\textbf{Endpoint} & \color{white}\textbf{File} & \color{white}\textbf{SHA-256} \\\hline
+\endfirsthead\hline\rowcolor{navy}\color{white}\textbf{Endpoint} & \color{white}\textbf{File} & \color{white}\textbf{SHA-256} \\\hline\endhead
+{\small\raggedright EP2SJ6NE\par} & {\ttfamily\scriptsize\raggedright libreoff\allowbreak{}ice-calc\allowbreak{}.desktop\par} & {\ttfamily\scriptsize\raggedright 93ffd792\allowbreak{}f92437a8\allowbreak{}50e4939c\allowbreak{}84442391\allowbreak{}a624e204\allowbreak{}46cea276\allowbreak{}fffcfa2a\allowbreak{}4c664548\par} \\
+\hline
+{\small\raggedright EP3GALVS\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright load-hub\allowbreak{}-i18n.bu\allowbreak{}ndle.js\par} & {\ttfamily\scriptsize\raggedright 036965c2\allowbreak{}4ac54284\allowbreak{}e0bfac48\allowbreak{}0395c912\allowbreak{}14e7b3c6\allowbreak{}4d002152\allowbreak{}66a75e89\allowbreak{}77140f10\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright shopping\allowbreak{}\_iframe\_\allowbreak{}driver.j\allowbreak{}s\par} & {\ttfamily\scriptsize\raggedright 100d970f\allowbreak{}c784e9bc\allowbreak{}b37b707e\allowbreak{}c4ef6982\allowbreak{}5b165a07\allowbreak{}3659f406\allowbreak{}8070a165\allowbreak{}184a087f\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright tokenize\allowbreak{}d-card.b\allowbreak{}undle.js\par} & {\ttfamily\scriptsize\raggedright 39f5d83d\allowbreak{}7982cfae\allowbreak{}057053b0\allowbreak{}dcffa66f\allowbreak{}ca12bee9\allowbreak{}769b1587\allowbreak{}a27e4387\allowbreak{}f56f29ec\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright wallet\_c\allowbreak{}heckout\_\allowbreak{}autofill\allowbreak{}\_driver.\allowbreak{}js\par} & {\ttfamily\scriptsize\raggedright 444d4db0\allowbreak{}51edabd5\allowbreak{}abb29d93\allowbreak{}dcc5b07e\allowbreak{}0c662b03\allowbreak{}e2d785e4\allowbreak{}a28dfb7f\allowbreak{}c8032fc4\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright wallet-b\allowbreak{}uynow.bu\allowbreak{}ndle.js\par} & {\ttfamily\scriptsize\raggedright 4aab5c4a\allowbreak{}c7a5cf0a\allowbreak{}ab311362\allowbreak{}514cda20\allowbreak{}a2f3beb7\allowbreak{}77a55375\allowbreak{}6bf8ad8c\allowbreak{}7dfaa2bd\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright wallet\_d\allowbreak{}onation\_\allowbreak{}driver.j\allowbreak{}s\par} & {\ttfamily\scriptsize\raggedright 528c866f\allowbreak{}abbe17c3\allowbreak{}0e9790a1\allowbreak{}2ac09b94\allowbreak{}dd820ba4\allowbreak{}e46b0f9d\allowbreak{}9bb78a27\allowbreak{}95992f1c\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright runtime.\allowbreak{}bundle.j\allowbreak{}s\par} & {\ttfamily\scriptsize\raggedright 569e425e\allowbreak{}7f048b1f\allowbreak{}769c22d6\allowbreak{}5aa91427\allowbreak{}b69c3d24\allowbreak{}8068af5e\allowbreak{}628cd946\allowbreak{}7ef250ca\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright load-ec-\allowbreak{}i18n.bun\allowbreak{}dle.js\par} & {\ttfamily\scriptsize\raggedright 56bada50\allowbreak{}510d9787\allowbreak{}8d514009\allowbreak{}279c3a66\allowbreak{}2d9894a2\allowbreak{}1c344fea\allowbreak{}8f9f9c5e\allowbreak{}3094614f\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright bnpl.bun\allowbreak{}dle.js\par} & {\ttfamily\scriptsize\raggedright 620389d2\allowbreak{}6167bea0\allowbreak{}8e56a904\allowbreak{}80f74d3d\allowbreak{}bd32c3e9\allowbreak{}74f4de7a\allowbreak{}95095366\allowbreak{}3a3fe6a1\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright bnpl\_dri\allowbreak{}ver.js\par} & {\ttfamily\scriptsize\raggedright 6c21396c\allowbreak{}9518fa41\allowbreak{}4ddb4dad\allowbreak{}a2adb09e\allowbreak{}2d2b2fc5\allowbreak{}069d89da\allowbreak{}7e9df2ad\allowbreak{}f2d95287\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright miniwall\allowbreak{}et.bundl\allowbreak{}e.js\par} & {\ttfamily\scriptsize\raggedright 6f47d71e\allowbreak{}9ee52102\allowbreak{}a57e8924\allowbreak{}41333ce1\allowbreak{}8f60ba3e\allowbreak{}356c565b\allowbreak{}4742ff12\allowbreak{}e465234a\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright notifica\allowbreak{}tion\_fas\allowbreak{}t.bundle\allowbreak{}.js\par} & {\ttfamily\scriptsize\raggedright 876ede3d\allowbreak{}ba963ec8\allowbreak{}e7b99252\allowbreak{}979f3825\allowbreak{}80718778\allowbreak{}5abb3759\allowbreak{}b99e3d35\allowbreak{}e30693fd\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright crypto.b\allowbreak{}undle.js\par} & {\ttfamily\scriptsize\raggedright 8e661de9\allowbreak{}4430dc02\allowbreak{}93ca7964\allowbreak{}f0f9b896\allowbreak{}82e8fd2f\allowbreak{}56c17fb4\allowbreak{}b3c3de24\allowbreak{}2d4f58d0\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright edge\_dri\allowbreak{}ver.js\par} & {\ttfamily\scriptsize\raggedright 985d0862\allowbreak{}ba672e36\allowbreak{}839438e4\allowbreak{}4cbaf6d1\allowbreak{}8537b530\allowbreak{}10b778a9\allowbreak{}4bd7d7f2\allowbreak{}fa85af13\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright notifica\allowbreak{}tion.bun\allowbreak{}dle.js\par} & {\ttfamily\scriptsize\raggedright b5aa710d\allowbreak{}917ed708\allowbreak{}f370fe18\allowbreak{}7bbc5fc4\allowbreak{}52e3bb66\allowbreak{}af0ed4f6\allowbreak{}42e54cd1\allowbreak{}55e86524\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright buynow\_d\allowbreak{}river.js\par} & {\ttfamily\scriptsize\raggedright bee346d1\allowbreak{}4d293f9f\allowbreak{}4b989362\allowbreak{}041875b0\allowbreak{}257477a7\allowbreak{}7759855e\allowbreak{}41c2f3cd\allowbreak{}40a6bed2\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright c3f9c4a4\allowbreak{}16e9e493\allowbreak{}005fc3f9\allowbreak{}7adacbcf\allowbreak{}12956a81\allowbreak{}cc6c645d\allowbreak{}255fd023\allowbreak{}442c8120\par} & {\ttfamily\scriptsize\raggedright c3f9c4a4\allowbreak{}16e9e493\allowbreak{}005fc3f9\allowbreak{}7adacbcf\allowbreak{}12956a81\allowbreak{}cc6c645d\allowbreak{}255fd023\allowbreak{}442c8120\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright app-setu\allowbreak{}p.js\par} & {\ttfamily\scriptsize\raggedright d604ac76\allowbreak{}7e070cf9\allowbreak{}8b235b02\allowbreak{}81ef932c\allowbreak{}463fa11b\allowbreak{}ceaf2fbf\allowbreak{}743bbf33\allowbreak{}743b0af1\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright webui-se\allowbreak{}tup.js\par} & {\ttfamily\scriptsize\raggedright e3d95016\allowbreak{}d0650591\allowbreak{}05580ae8\allowbreak{}ba811cf4\allowbreak{}bb130b51\allowbreak{}5b8c77e5\allowbreak{}e58cf957\allowbreak{}63ad938a\par} \\
+\hline
+{\small\raggedright EP4YIFHV\par} & {\ttfamily\scriptsize\raggedright load-ec-\allowbreak{}deps.bun\allowbreak{}dle.js\par} & {\ttfamily\scriptsize\raggedright f2bf148b\allowbreak{}4d999cb4\allowbreak{}1ec76496\allowbreak{}0ee718e0\allowbreak{}c9986a74\allowbreak{}9f3b7be3\allowbreak{}72ad86cf\allowbreak{}98f323de\par} \\
+\hline
+{\small\raggedright EP7UYCXM\par} & {\ttfamily\scriptsize\raggedright libeToke\allowbreak{}n.so.10.\allowbreak{}7.77\par} & {\ttfamily\scriptsize\raggedright 574564cd\allowbreak{}6ed90f79\allowbreak{}38ab4967\allowbreak{}d5802f28\allowbreak{}cddc38ed\allowbreak{}1148e428\allowbreak{}38083ea6\allowbreak{}553c3be5\par} \\
+\hline
+{\small\raggedright EPAGTKNF\par} & {\ttfamily\scriptsize\raggedright Buy CP PLUS Dashboar\allowbreak{}d Camera, Warranty NONE 1 year online \_ Public Procurem\allowbreak{}ent Portal (PPP).pd\allowbreak{}f\par} & {\ttfamily\scriptsize\raggedright 18866b6f\allowbreak{}7308f73b\allowbreak{}c1b63193\allowbreak{}e50629bf\allowbreak{}d4fff701\allowbreak{}d6b9d3d2\allowbreak{}d6331b90\allowbreak{}e9162208\par} \\
+\hline
+{\small\raggedright EPAJI3E5\par} & {\ttfamily\scriptsize\raggedright Lakeside traders.\allowbreak{}docx\par} & {\ttfamily\scriptsize\raggedright c11e86d9\allowbreak{}e30b5fad\allowbreak{}8daf1c15\allowbreak{}c4dbbfd8\allowbreak{}d31b581a\allowbreak{}5d930b9c\allowbreak{}66d996d3\allowbreak{}bda11a2f\par} \\
+\hline
+{\small\raggedright EPAJI3E5\par} & {\ttfamily\scriptsize\raggedright Lakeside traders.\allowbreak{}pdf\par} & {\ttfamily\scriptsize\raggedright da22b024\allowbreak{}b1ba07c3\allowbreak{}67e812e3\allowbreak{}c2f889f6\allowbreak{}0cd3eb97\allowbreak{}58be906f\allowbreak{}6d5c231b\allowbreak{}8b71937b\par} \\
+\hline
+{\small\raggedright EPC2L3UH\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPDRB236\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPEEHWSG\par} & {\ttfamily\scriptsize\raggedright Library Books.xl\allowbreak{}sx\par} & {\ttfamily\scriptsize\raggedright 98d11999\allowbreak{}3c27068f\allowbreak{}00bdf18a\allowbreak{}17d6613a\allowbreak{}e6ce6046\allowbreak{}b6b66209\allowbreak{}79282c26\allowbreak{}62c4efbd\par} \\
+\hline
+{\small\raggedright EPF4AJCM\par} & {\ttfamily\scriptsize\raggedright libreoff\allowbreak{}ice-calc\allowbreak{}.desktop\par} & {\ttfamily\scriptsize\raggedright 93ffd792\allowbreak{}f92437a8\allowbreak{}50e4939c\allowbreak{}84442391\allowbreak{}a624e204\allowbreak{}46cea276\allowbreak{}fffcfa2a\allowbreak{}4c664548\par} \\
+\hline
+{\small\raggedright EPFQSCDV\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPGSQVEB\par} & {\ttfamily\scriptsize\raggedright Final\_Do\allowbreak{}cuments.\allowbreak{}zip\par} & {\ttfamily\scriptsize\raggedright 404ee575\allowbreak{}31c33156\allowbreak{}d62154f4\allowbreak{}9e3700c8\allowbreak{}c1f09cd0\allowbreak{}c75692f7\allowbreak{}95748d59\allowbreak{}b9145088\par} \\
+\hline
+{\small\raggedright EPJ42VCZ\par} & {\ttfamily\scriptsize\raggedright RAGHAV STNA STNB.pdf\par} & {\ttfamily\scriptsize\raggedright 854b8f77\allowbreak{}16627df3\allowbreak{}33e8ecfe\allowbreak{}ae5887c0\allowbreak{}2b319565\allowbreak{}8f739457\allowbreak{}3fe21b67\allowbreak{}e93e11be\par} \\
+\hline
+{\small\raggedright EPJ42VCZ\par} & {\ttfamily\scriptsize\raggedright RAGHAV STNC STNA.pdf\par} & {\ttfamily\scriptsize\raggedright a2beca18\allowbreak{}70ae689f\allowbreak{}4b046a20\allowbreak{}c3d8e2e4\allowbreak{}8557d782\allowbreak{}dea53489\allowbreak{}b21a8b0a\allowbreak{}dcef38be\par} \\
+\hline
+{\small\raggedright EPJ76RZV\par} & {\ttfamily\scriptsize\raggedright COMPRESS\allowbreak{}ED FINAL COMPARIS\allowbreak{}ION RETIREES WELFARE1\allowbreak{}.xlsx\par} & {\ttfamily\scriptsize\raggedright d4a23078\allowbreak{}663777e7\allowbreak{}58c04d26\allowbreak{}70b0d6aa\allowbreak{}c8aa7ba5\allowbreak{}f91f811c\allowbreak{}5d94fa6c\allowbreak{}e8b7ef56\par} \\
+\hline
+{\small\raggedright EPJYEC7F\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPLDM6PE\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPMDU6L5\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5dd59e83\allowbreak{}09b4be90\allowbreak{}aad58871\allowbreak{}d82a5b3f\allowbreak{}b6dcd7ff\allowbreak{}19a7fb34\allowbreak{}58773251\allowbreak{}2b28739d\par} \\
+\hline
+{\small\raggedright EPMQTKSL\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPMVZYZO\par} & {\ttfamily\scriptsize\raggedright mydoc-10\allowbreak{}.pdf\par} & {\ttfamily\scriptsize\raggedright 5b791420\allowbreak{}2b30fc7e\allowbreak{}28ddcd2f\allowbreak{}82502aa8\allowbreak{}531035b8\allowbreak{}12ee2194\allowbreak{}d978b7e9\allowbreak{}20f43066\par} \\
+\hline
+{\small\raggedright EPMVZYZO\par} & {\ttfamily\scriptsize\raggedright mydoc-9.\allowbreak{}pdf\par} & {\ttfamily\scriptsize\raggedright 7c10f540\allowbreak{}76fba814\allowbreak{}1f8ef95a\allowbreak{}701d0a4b\allowbreak{}dadfc63a\allowbreak{}5b98bec1\allowbreak{}6b6b6843\allowbreak{}9ebc3dc7\par} \\
+\hline
+{\small\raggedright EPMVZYZO\par} & {\ttfamily\scriptsize\raggedright mydoc-75\allowbreak{}.pdf\par} & {\ttfamily\scriptsize\raggedright 92e24303\allowbreak{}edb5f2b6\allowbreak{}f1bc6c0c\allowbreak{}37565571\allowbreak{}7eb2227c\allowbreak{}1622c4a7\allowbreak{}23791aaf\allowbreak{}ce33965d\par} \\
+\hline
+{\small\raggedright EPMVZYZO\par} & {\ttfamily\scriptsize\raggedright mydoc.pd\allowbreak{}f\par} & {\ttfamily\scriptsize\raggedright d4748335\allowbreak{}03a6404b\allowbreak{}8106d981\allowbreak{}c9f0769e\allowbreak{}4bd97033\allowbreak{}f45cf424\allowbreak{}e360b61f\allowbreak{}659c8cb1\par} \\
+\hline
+{\small\raggedright EPNPX6VY\par} & {\ttfamily\scriptsize\raggedright Microsof\allowbreak{}t.Practi\allowbreak{}ces.Ente\allowbreak{}rpriseLi\allowbreak{}brary.Co\allowbreak{}mmon.dll\par} & {\ttfamily\scriptsize\raggedright bde5bba1\allowbreak{}2f076659\allowbreak{}ab19d3df\allowbreak{}625dedc7\allowbreak{}21118003\allowbreak{}8c821b77\allowbreak{}b431b626\allowbreak{}47ef231f\par} \\
+\hline
+{\small\raggedright EPOC6Y4R\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPPGWIOF\par} & {\ttfamily\scriptsize\raggedright rawtobr3\par} & {\ttfamily\scriptsize\raggedright 64efda77\allowbreak{}04564dd5\allowbreak{}0c7514e7\allowbreak{}4ef3c525\allowbreak{}2bc68af8\allowbreak{}f3b0d923\allowbreak{}58b64771\allowbreak{}980665af\par} \\
+\hline
+{\small\raggedright EPPGWIOF\par} & {\ttfamily\scriptsize\raggedright brprintc\allowbreak{}onflsr3\par} & {\ttfamily\scriptsize\raggedright 6594cac0\allowbreak{}8d03782a\allowbreak{}d43d6b29\allowbreak{}3faff904\allowbreak{}f20032c8\allowbreak{}eb37a1b2\allowbreak{}7b6caf57\allowbreak{}b1aeae5e\par} \\
+\hline
+{\small\raggedright EPQBJBDX\par} & {\ttfamily\scriptsize\raggedright dash cam.pdf\par} & {\ttfamily\scriptsize\raggedright 30c78bc9\allowbreak{}ec28a6e4\allowbreak{}d47708c3\allowbreak{}09f8c885\allowbreak{}99c71a0f\allowbreak{}b379a3b4\allowbreak{}d75847d0\allowbreak{}f66ef0ca\par} \\
+\hline
+{\small\raggedright EPQKOBYG\par} & {\ttfamily\scriptsize\raggedright win-lbp6\allowbreak{}23-621-f\allowbreak{}w-v1301(\allowbreak{}1).exe\par} & {\ttfamily\scriptsize\raggedright f475a746\allowbreak{}2dd85932\allowbreak{}ad7f9935\allowbreak{}4751663d\allowbreak{}1543adb5\allowbreak{}e37c7c51\allowbreak{}ece78e10\allowbreak{}b6c37189\par} \\
+\hline
+{\small\raggedright EPR4BEDS\par} & {\ttfamily\scriptsize\raggedright recently\allowbreak{}-used.xb\allowbreak{}el\par} & {\ttfamily\scriptsize\raggedright 5e10b349\allowbreak{}0160cca0\allowbreak{}fc872f2b\allowbreak{}026d4b40\allowbreak{}bafc2368\allowbreak{}52f83d30\allowbreak{}c9031899\allowbreak{}e50adc9c\par} \\
+\hline
+{\small\raggedright EPRD7FJT\par} & {\ttfamily\scriptsize\raggedright 12th Plan Works Dashboar\allowbreak{}d.pdf\par} & {\ttfamily\scriptsize\raggedright 5c7fc859\allowbreak{}c5a8f2bb\allowbreak{}a02446c3\allowbreak{}0020bb2b\allowbreak{}478686d6\allowbreak{}6b566818\allowbreak{}c7382c84\allowbreak{}0d95720f\par} \\
+\hline
+{\small\raggedright EPSES7ZK\par} & {\ttfamily\scriptsize\raggedright hp\_LJ102\allowbreak{}0\_Full\_S\allowbreak{}olution-\allowbreak{}v2012\_91\allowbreak{}8\_1\_5798\allowbreak{}0(1).exe\par} & {\ttfamily\scriptsize\raggedright f0c48557\allowbreak{}15701008\allowbreak{}98f2d155\allowbreak{}31fbe453\allowbreak{}1ba303a2\allowbreak{}52cd40a7\allowbreak{}9b64c197\allowbreak{}6a5a9890\par} \\
+\hline
+{\small\raggedright EPSJWX5J\par} & {\ttfamily\scriptsize\raggedright Staff\_Li\allowbreak{}brary\_Pa\allowbreak{}yment\_Fi\allowbreak{}nal.docx\par} & {\ttfamily\scriptsize\raggedright d831cf99\allowbreak{}0c1445b5\allowbreak{}07ef9fea\allowbreak{}05a6e483\allowbreak{}983aa473\allowbreak{}7fa56fcf\allowbreak{}650a96af\allowbreak{}1cee0cd5\par} \\
+\hline
+{\small\raggedright EPT3KTUL\par} & {\ttfamily\scriptsize\raggedright Dash Camera-4\allowbreak{}9600.00.\allowbreak{}pdf\par} & {\ttfamily\scriptsize\raggedright 7505de47\allowbreak{}59aadebf\allowbreak{}5e21b2cc\allowbreak{}0f7f13fc\allowbreak{}cdbec968\allowbreak{}e3b82be7\allowbreak{}0791197f\allowbreak{}ac3d21bc\par} \\
+\hline
+{\small\raggedright EPVC2P55\par} & {\ttfamily\scriptsize\raggedright Data1.ca\allowbreak{}b\par} & {\ttfamily\scriptsize\raggedright 925b63ce\allowbreak{}20d94bc4\allowbreak{}a0d98d02\allowbreak{}d153161d\allowbreak{}bba9ac61\allowbreak{}c39ec323\allowbreak{}ac8a73b2\allowbreak{}acbde42e\par} \\
+\hline
+{\small\raggedright EPVSWBNA\par} & {\ttfamily\scriptsize\raggedright launcher\allowbreak{}.exe\par} & {\ttfamily\scriptsize\raggedright 61a67e53\allowbreak{}c6c0c80a\allowbreak{}4e95af35\allowbreak{}a2997ad2\allowbreak{}ce597200\allowbreak{}20fc7438\allowbreak{}991eda35\allowbreak{}41df73b6\par} \\
+\hline
+{\small\raggedright EPVSWBNA\par} & {\ttfamily\scriptsize\raggedright Strings.\allowbreak{}dll\par} & {\ttfamily\scriptsize\raggedright ae107170\allowbreak{}c153cb3e\allowbreak{}b34c0494\allowbreak{}82722d39\allowbreak{}37f2c03a\allowbreak{}6c23cadb\allowbreak{}9bbdb903\allowbreak{}4e28b9c0\par} \\
+\hline
+{\small\raggedright EPVSWBNA\par} & {\ttfamily\scriptsize\raggedright zshp1020\allowbreak{}s.dll\par} & {\ttfamily\scriptsize\raggedright c6525c52\allowbreak{}30387653\allowbreak{}e16f21f4\allowbreak{}08eab820\allowbreak{}2157b0ed\allowbreak{}deb180bd\allowbreak{}91a13e86\allowbreak{}0fbee4f4\par} \\
+\hline
+{\small\raggedright EPWZ7L6L\par} & {\ttfamily\scriptsize\raggedright ops-elec\allowbreak{}tron-app\allowbreak{}.desktop\par} & {\ttfamily\scriptsize\raggedright dd294df9\allowbreak{}886197bd\allowbreak{}68807cee\allowbreak{}3bf62d10\allowbreak{}859b4860\allowbreak{}bd95421d\allowbreak{}da6bb67d\allowbreak{}b9648dd1\par} \\
+\hline
+{\small\raggedright EPZRAPEL\par} & {\ttfamily\scriptsize\raggedright 53EDA428\allowbreak{}69D42626\allowbreak{}2B752F08\allowbreak{}8EA60518\allowbreak{}7284ACE8\par} & {\ttfamily\scriptsize\raggedright 2e4dff16\allowbreak{}72bbabba\allowbreak{}74a0a99d\allowbreak{}54e38e56\allowbreak{}e036ce84\allowbreak{}71989583\allowbreak{}039b3c3e\allowbreak{}7edac0b7\par} \\
+\hline
+\end{longtable}
+\section{Appendix B: Reproducibility}
+\codebox{uv sync\\uv run python rich\_triage.py\\uv run python phase1\_triage.py\\uv run python gen\_figures.py\\uv run python generate\_latex.py\\cd Latex \&\& latexmk -pdf main.tex}
+\end{document}
